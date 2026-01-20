@@ -9,33 +9,31 @@ authors = [
   { name = "SimNIBS developers", email = "support@simnibs.org" }
 ]
 maintainers = []
-dependencies = [
-  # 3D 快速多极子方法（Fast Multipole Method, FMM）Python 接口
-  "fmm3dpy==1.0.0",
-  "h5py",
-  "jsonschema",
-  "nibabel",
-  "numba",
-  "numpy",
-  # PETSc 的 Python 接口（并行线性代数求解器）
-  "petsc4py",
-  "pillow",
-  # 生成高斯点/权重（Gauss–Patterson / Gaussian quadrature）
-  "pygpc==0.4.1",
-  "requests",
-  # MRI 分割工具（SAMSEG）
-  "samseg",
-  "scipy",
-  "mkl; sys_platform != 'darwin'",
-  "tbb; sys_platform != 'darwin'",
-]
+dynamic = [ "dependencies" ]
+
+[tool.poetry.dependencies]
+cython = "3.0.11"
+h5py = "3.11.0"
+jsonschema = "4.23.0"
+mkl = "2024.2.1"
+nibabel = "5.2.1"
+numba = "0.60.0"
+numpy = "1.26.4"
+pillow = "10.4.0"
+requests = "2.32.3"
+scipy = "1.14.1"
+tbb-devel = "2021.13.0"
+fmm3dpy = "1.0.0"
+samseg = "0.4a0"
+pygpc = "0.4.1"
+petsc4py = { url = "https://github.com/simnibs/petsc4py/releases/download/v3.21.5/petsc4py-3.21.5-cp311-cp311-win_amd64.whl" }
 
 [tool.poetry]
 package-mode = false
 
 [tool.poetry.group.dev.dependencies]
-pytest = "*"
-mock = "*"
+pytest="8.3.3"
+mock="5.1.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0"]
