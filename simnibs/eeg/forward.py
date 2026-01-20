@@ -57,7 +57,10 @@ def compute_tdcs_leadfield(
 
     m2m = SubjectFiles(subpath=str(m2m_dir))
 
-    if subsampling and not all(m2m.get_surface(h, "central", subsampling=subsampling).exists() for h in m2m.hemispheres):
+    if subsampling and not all(
+        m2m.get_surface(h, "central", subsampling=subsampling).exists()
+        for h in m2m.hemispheres
+    ):
         _ = subsample_surfaces(m2m_dir, n_points=subsampling)
 
     # The paths should be strings otherwise errors might occur when writing the
@@ -186,7 +189,7 @@ def prepare_forward(fwd_name: Union[Path, str], apply_average_proj: bool = True)
         n_channels=nchan,
         n_sources=nsrc,
         n_orientations=nori,
-        subsampling=interp_subsampling
+        subsampling=interp_subsampling,
     )
 
 
@@ -309,9 +312,6 @@ def _write_src_fwd_morph(src, forward, morph, fname_leadfield, subsampling, out_
         src.save(fname_src.with_suffix(".fif"), **kw)
 
     elif out_format == "fieldtrip":
-        import scipy.io
-
-        scipy.io.savemat(fname_fwd.with_suffix(".mat"), dict(fwd=forward))
-        if morph:
-            scipy.io.savemat(fname_morph.with_suffix(".mat"), dict(morph=morph))
-        scipy.io.savemat(fname_src.with_suffix(".mat"), dict(src=src))
+        raise NotImplementedError(
+            "MATLAB .mat file support has been removed. Please use other file formats."
+        )

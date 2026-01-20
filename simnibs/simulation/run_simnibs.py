@@ -1,7 +1,7 @@
 import logging
 import warnings
+
 import numpy as np
-from ..utils.matlab_read import read_mat
 
 
 def run_simnibs(simnibs_struct, cpus=1):
@@ -17,7 +17,9 @@ def run_simnibs(simnibs_struct, cpus=1):
     np.set_printoptions(precision=4)
 
     if isinstance(simnibs_struct, str):
-        p = read_mat(simnibs_struct)
+        raise NotImplementedError(
+            "MATLAB .mat file support has been removed. Please use other file formats."
+        )
     else:
         p = simnibs_struct
     out = p.run(cpus=cpus)
@@ -27,6 +29,6 @@ def run_simnibs(simnibs_struct, cpus=1):
 
 def run_simulation(simnibs_struct, cpus=1):
     warnings.warn(
-        'run_simulation deprecated, please use run_simnibs instead',
-        DeprecationWarning)
+        "run_simulation deprecated, please use run_simnibs instead", DeprecationWarning
+    )
     run_simnibs(simnibs_struct, cpus=cpus)

@@ -1,23 +1,31 @@
-import os
-import time
-import glob
-import h5py
 import functools
 import gc
+import glob
+import os
+import time
+
+import h5py
 import numpy as np
 
 from simnibs.simulation.tms_coil.tms_coil import TmsCoil
 from simnibs.simulation.tms_coil.tms_coil_element import DipoleElements
 
-from . import ADMlib
-from ..simulation import fem
-from ..utils import cond_utils
-from ..simulation.sim_struct import SESSION, TMSLIST, SimuList, save_matlab_sim_struct
 from ..mesh_tools import mesh_io
-from ..utils.simnibs_logger import logger
+from ..simulation import fem
+from ..simulation.sim_struct import SESSION, TMSLIST, SimuList
+from ..utils import cond_utils
 from ..utils.file_finder import SubjectFiles
-from ..utils.matlab_read import try_to_read_matlab_field, remove_None
 from ..utils.mesh_element_properties import ElementTags
+from ..utils.simnibs_logger import logger
+from . import ADMlib
+
+
+def remove_None(src):
+    """Local replacement for remove_None"""
+    if src is None:
+        src = ""
+    return src
+
 
 class TMSoptimize:
     """
@@ -75,7 +83,7 @@ class TMSoptimize:
         Keep intermediate _direct_optimization() ouput. Default: False.
     """
 
-    def __init__(self, matlab_struct=None):
+    def __init__(self):
         # : Date when the session was initiated
         self.date = time.strftime("%Y-%m-%d %H:%M:%S")
         self.time_str = time.strftime("%Y%m%d-%H%M%S")
@@ -118,8 +126,6 @@ class TMSoptimize:
         self.name = ""  # This is here only for leagacy reasons, it doesnt do anything
 
         self._log_handlers = []
-        if matlab_struct:
-            self.read_mat_struct(matlab_struct)
 
     @property
     def fn_tensor_nifti(self):
@@ -172,9 +178,12 @@ class TMSoptimize:
         self.mesh = mesh_io.read_msh(self.fnamehead)
         TMSLIST.resolve_fnamecoil(self)
         single_target_defined = self.target is not None and len(self.target) == 3
-        multiple_targets_defined = self.multiple_targets is not None and np.shape(self.multiple_targets)[1] == 3
+        multiple_targets_defined = (
+            self.multiple_targets is not None
+            and np.shape(self.multiple_targets)[1] == 3
+        )
         if not single_target_defined and not multiple_targets_defined:
-            raise ValueError('Target for optimization not defined')
+            raise ValueError("Target for optimization not defined")
 
         assert self.search_radius > 0
         assert self.spatial_resolution > 0
@@ -188,96 +197,6 @@ class TMSoptimize:
             self.centre = np.copy(self.target)
         if self.target_direction is not None and len(self.target_direction) == 0:
             self.target_direction = None
-
-    def sim_struct2mat(self):
-        mat = SimuList.cond_mat_struct(self)
-        mat["type"] = self.type
-        mat["date"] = remove_None(self.date)
-        mat["subpath"] = remove_None(self.subpath)
-        mat["fnamehead"] = remove_None(self.fnamehead)
-        mat["pathfem"] = remove_None(self.pathfem)
-        mat["fname_tensor"] = remove_None(self.fname_tensor)
-        mat["tissues"] = remove_None(self.tissues)
-        mat["fnamecoil"] = remove_None(self.fnamecoil)
-
-        mat["target"] = remove_None(self.target)
-        mat["multiple_targets"] = remove_None(self.multiple_targets)
-        mat["target_direction"] = remove_None(self.target_direction)
-        mat["target_size"] = remove_None(self.target_size)
-        mat["centre"] = remove_None(self.centre)
-        mat["pos_ydir"] = remove_None(self.pos_ydir)
-        mat["distance"] = remove_None(self.distance)
-        mat["didt"] = remove_None(self.didt)
-        mat["search_radius"] = remove_None(self.search_radius)
-        mat["spatial_resolution"] = remove_None(self.spatial_resolution)
-        mat["search_angle"] = remove_None(self.search_angle)
-        mat["angle_resolution"] = remove_None(self.angle_resolution)
-        mat["open_in_gmsh"] = remove_None(self.open_in_gmsh)
-        mat["solver_options"] = remove_None(self.solver_options)
-        mat["method"] = remove_None(self.method)
-        mat["scalp_normals_smoothing_steps"] = remove_None(
-            self.scalp_normals_smoothing_steps
-        )
-        return mat
-
-    @classmethod
-    def read_mat_struct(self, mat):
-        """Reads parameters from matlab structure
-
-        Parameters
-        ----------
-        mat: scipy.io.loadmat
-            Loaded matlab structure
-        """
-        self = self()
-        SimuList.read_cond_mat_struct(self, mat)
-        self.date = try_to_read_matlab_field(mat, "date", str, self.date)
-        self.subpath = try_to_read_matlab_field(mat, "subpath", str, self.subpath)
-        self.fnamehead = try_to_read_matlab_field(mat, "fnamehead", str, self.fnamehead)
-        self.pathfem = try_to_read_matlab_field(mat, "pathfem", str, self.pathfem)
-        self.fnamecoil = try_to_read_matlab_field(mat, "fnamecoil", str, self.fnamecoil)
-        self.fname_tensor = try_to_read_matlab_field(
-            mat, "fname_tensor", str, self.fname_tensor
-        )
-        self.target = try_to_read_matlab_field(mat, "target", list, self.target)
-        self.multiple_targets = try_to_read_matlab_field(mat, "multiple_targets", list, self.multiple_targets)
-        self.target_direction = try_to_read_matlab_field(
-            mat, "target_direction", list, self.target_direction
-        )
-        self.target_size = try_to_read_matlab_field(
-            mat, "target_size", float, self.target_size
-        )
-        self.centre = try_to_read_matlab_field(mat, "centre", list, self.centre)
-        self.centre = try_to_read_matlab_field(mat, "center", list, self.centre)
-        self.pos_ydir = try_to_read_matlab_field(mat, "pos_ydir", list, self.pos_ydir)
-        self.distance = try_to_read_matlab_field(mat, "distance", float, self.distance)
-        self.didt = try_to_read_matlab_field(mat, "didt", float, self.didt)
-        self.search_radius = try_to_read_matlab_field(
-            mat, "search_radius", float, self.search_radius
-        )
-        self.spatial_resolution = try_to_read_matlab_field(
-            mat, "spatial_resolution", float, self.spatial_resolution
-        )
-        self.search_angle = try_to_read_matlab_field(
-            mat, "search_angle", float, self.search_angle
-        )
-        self.angle_resolution = try_to_read_matlab_field(
-            mat, "angle_resolution", float, self.angle_resolution
-        )
-        self.open_in_gmsh = try_to_read_matlab_field(
-            mat, "open_in_gmsh", bool, self.open_in_gmsh
-        )
-        self.solver_options = try_to_read_matlab_field(
-            mat, "solver_options", str, self.solver_options
-        )
-        self.method = try_to_read_matlab_field(mat, "method", str, self.method)
-        self.scalp_normals_smoothing_steps = try_to_read_matlab_field(
-            mat,
-            "scalp_normals_smoothing_steps",
-            int,
-            self.scalp_normals_smoothing_steps,
-        )
-        return self
 
     def run(self, cpus=1, allow_multiple_runs=False, save_mat=True, return_n_max=1):
         """Runs the tms optimization
@@ -318,12 +237,12 @@ class TMSoptimize:
 
         self._prepare()
         if save_mat:
-            save_matlab_sim_struct(
-                self,
-                os.path.join(
-                    dir_name, "simnibs_simulation_{0}.mat".format(self.time_str)
-                ),
+            logger.warning(
+                "MATLAB .mat file support has been removed. "
+                "Skipping saving of simulation structure to .mat file."
             )
+            # save_matlab_sim_struct function has been removed
+            # Previously saved to: os.path.join(dir_name, "simnibs_simulation_{0}.mat".format(self.time_str))
         logger.info(str(self))
         pos_matrices = self._get_coil_positions()
         target_region = self._get_target_region()
@@ -453,20 +372,13 @@ class TMSoptimize:
     def _get_target_region(self):
         if self.multiple_targets is not None:
             region = define_target_region_from_multiple_positions(
-                self.mesh,
-                self.multiple_targets,
-                self.target_size,
-                self.tissues
+                self.mesh, self.multiple_targets, self.target_size, self.tissues
             )
         else:
             region = define_target_region(
-                self.mesh,
-                self.target,
-                self.target_size,
-                self.tissues
+                self.mesh, self.target, self.target_size, self.tissues
             )
         return region
-
 
     def _direct_optimize(
         self, cond_field, target_region, pos_matrices, cpus, keep_hdf5=False
@@ -554,7 +466,9 @@ class TMSoptimize:
         moments = []
         for coil_element in coil.elements:
             if not isinstance(coil_element, DipoleElements):
-                raise ValueError('ADM optimization is only possible with dipole based coil files')
+                raise ValueError(
+                    "ADM optimization is only possible with dipole based coil files"
+                )
             dipoles.append(coil_element.get_points() * 1e-3)
             moments.append(coil_element.get_values())
 
@@ -650,7 +564,11 @@ class TMSoptimize:
         string += "Mesh file name: %s\n" % self.fnamehead
         string += "Coil file: %s\n" % self.fnamecoil
         string += "Target: %s\n" % self.target
-        string += 'Number of targets: {}\n'.format("1" if self.multiple_targets is None else str(np.shape(self.multiple_targets)[0]))
+        string += "Number of targets: {}\n".format(
+            "1"
+            if self.multiple_targets is None
+            else str(np.shape(self.multiple_targets)[0])
+        )
         string += "Target Direction: %s\n" % self.target_direction
         string += "Centre position: %s\n" % self.centre
         string += "Reference y: %s\n" % self.pos_ydir
@@ -862,7 +780,7 @@ def plot_matsimnibs_list(matsimnibs_list, values, field_name, fn_geo):
                 "VP(" + ", ".join([str(i) for i in c]) + ")"
                 "{" + ", ".join([str(i) for i in y]) + "};\n"
             )
-            f.write("SP(" + ", ".join([str(i) for i in c]) + ")" "{" + str(v) + "};\n")
+            f.write("SP(" + ", ".join([str(i) for i in c]) + "){" + str(v) + "};\n")
         f.write("};\n")
 
 
@@ -897,8 +815,10 @@ def define_target_region(mesh, target_position, target_radius, tags, elm_type=4)
     return elm
 
 
-def define_target_region_from_multiple_positions(mesh, target_positions, target_radius, tags, elm_type=4):
-    ''' Defines a target based on multiple positions, a radius and an element tag.
+def define_target_region_from_multiple_positions(
+    mesh, target_positions, target_radius, tags, elm_type=4
+):
+    """Defines a target based on multiple positions, a radius and an element tag.
     Target will include elements that are within the target_radius of any of the target_positions.
 
     Paramters
@@ -918,18 +838,18 @@ def define_target_region_from_multiple_positions(mesh, target_positions, target_
     -------
     elements: array of size (n,)
         Numbers (1-based) of elements in the tag
-    '''
+    """
     bar = mesh.elements_baricenters()[:]
     center_pos = np.mean(target_positions, axis=0)
     max_dist = np.linalg.norm(target_positions - center_pos, axis=1).max() * 1.1
     dist = np.linalg.norm(bar - center_pos, axis=1)
     elm = mesh.elm.elm_number[
-        (dist <= max_dist) *
-        np.isin(mesh.elm.tag1, tags) *
-        np.isin(mesh.elm.elm_type, elm_type)
+        (dist <= max_dist)
+        * np.isin(mesh.elm.tag1, tags)
+        * np.isin(mesh.elm.elm_type, elm_type)
     ]
     candidate_elm = elm
-    candidate_bar = bar[elm-1]
+    candidate_bar = bar[elm - 1]
 
     elm_in_roi = set()
     for pos in target_positions:

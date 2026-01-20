@@ -175,7 +175,6 @@ numpy = ">=1.26.4,<2.0.0"
 petsc4py = ">=3.21.5"
 pillow = ">=10.4.0"
 pygpc = "0.4.1"
-PyQt5 = ">=5.15"
 requests = ">=2.32.3"
 samseg = "0.4a0"
 scipy = ">=1.14.1"
@@ -188,10 +187,6 @@ tbb = { version = ">=2021.13.0", markers = "sys_platform != 'darwin'" }
 [tool.poetry.group.test.dependencies]
 pytest = ">=8.3.3"
 mock = ">=5.1.0"
-
-[tool.poetry.group.gui.dependencies]
-pyqt5 = ">=5.15"
-pyopengl = ">=3.1.6"
 
 [tool.poetry.group.mumps.dependencies]
 python-mumps = ">=0.0.2"  # 可选：用于 MUMPS 求解器支持
@@ -261,7 +256,6 @@ exclude = ["packing*", "docs*"]
 | **petsc4py** | PETSc（可移植扩展科学计算工具包）的 Python 接口，用于并行数值求解 |
 | **pillow** | Python 图像处理库，用于读取和处理图像文件 |
 | **pygpc** | 广义多项式混沌（Generalized Polynomial Chaos）库，用于不确定性量化 |
-| **PyQt5** | Qt 应用程序框架的 Python 绑定，用于构建图形用户界面（GUI） |
 | **requests** | HTTP 客户端库，用于发送网络请求和下载数据 |
 | **samseg** | 医学图像分割工具，用于脑部 MRI 图像分割 |
 | **scipy** | 科学计算库，提供优化、积分、插值、信号处理等算法 |
@@ -275,8 +269,6 @@ exclude = ["packing*", "docs*"]
 |--------|------------|----------|
 | **pytest** | test | Python 测试框架，用于编写和运行测试用例 |
 | **mock** | test | 测试辅助库，用于创建模拟对象和打桩 |
-| **pyqt5** | gui | Qt 应用程序框架，用于构建图形用户界面 |
-| **pyopengl** | gui | OpenGL 的 Python 绑定，用于 3D 图形渲染 |
 | **python-mumps** | mumps | MUMPS（多用途稀疏求解器）的 Python 接口，用于线性方程组求解 |
 
 ### 平台特定依赖库

@@ -1,31 +1,31 @@
 /* Christian Gaser
- * $Id: sanlm_float.c 854 2016-02-08 08:04:43Z gaser $ 
+ * $Id: sanlm_float.c 854 2016-02-08 08:04:43Z gaser $
  *
  *
- * This code is a modified version of MABONLM3D.c 
- * Jose V. Manjon - jmanjon@fis.upv.es                                     
- * Pierrick Coupe - pierrick.coupe@gmail.com                               
- * Brain Imaging Center, Montreal Neurological Institute.                  
- * Mc Gill University                                                      
- *                                                                         
- * Copyright (C) 2010 Jose V. Manjon and Pierrick Coupe                    
+ * This code is a modified version of MABONLM3D.c
+ * Jose V. Manjon - jmanjon@fis.upv.es
+ * Pierrick Coupe - pierrick.coupe@gmail.com
+ * Brain Imaging Center, Montreal Neurological Institute.
+ * Mc Gill University
+ *
+ * Copyright (C) 2010 Jose V. Manjon and Pierrick Coupe
 
  ***************************************************************************
- *              Adaptive Non-Local Means Denoising of MR Images            *             
+ *              Adaptive Non-Local Means Denoising of MR Images            *
  *              With Spatially Varying Noise Levels                        *
- *                                                                         * 
+ *                                                                         *
  *              Jose V. Manjon, Pierrick Coupe, Luis Marti-Bonmati,        *
  *              D. Louis Collins and Montserrat Robles                     *
  ***************************************************************************
  *
- *                          Details on SANLM filter                        
+ *                          Details on SANLM filter
  ***************************************************************************
  *  The SANLM filter is described in:                                      *
  *                                                                         *
  *  Jose V. Manjon, Pierrick Coupe, Luis Marti-Bonmati, Montserrat Robles  *
  *  and D. Louis Collins.                                                  *
  *  Adaptive Non-Local Means Denoising of MR Images with Spatially Varying *
- *  Noise Levels. Journal of Magnetic Resonance Imaging, 31,192-203, 2010. *                                                       
+ *  Noise Levels. Journal of Magnetic Resonance Imaging, 31,192-203, 2010. *
  *                                                                         *
  ***************************************************************************/
 
@@ -35,7 +35,7 @@
 #include <stdio.h>
 
 #ifdef MATLAB_MEX_FILE
-#include <mex.h> 
+#include <mex.h>
 #endif
 
 /* Multithreading stuff */
@@ -52,16 +52,16 @@ typedef struct{
     int rows;
     int cols;
     int slices;
-    float* in_image;   
+    float* in_image;
     float* means_image;
-    float* var_image;    
-    float* estimate;    
+    float* var_image;
+    float* estimate;
     float* bias;
-    unsigned char* label;    
+    unsigned char* label;
     int ini;
     int fin;
     int radioB;
-    int radioS;   
+    int radioS;
 } myargument;
 
 int rician;
@@ -71,19 +71,19 @@ double max;
 double bessi0(double x)
 {
   double ax,ans,a;
-  double y; 
-  if ((ax = fabs(x)) < 3.75) 
-  { 
+  double y;
+  if ((ax = fabs(x)) < 3.75)
+  {
     y = x/3.75;
     y *= y;
     ans = 1.0+y*(3.5156229+y*(3.0899424+y*(1.2067492+y*(0.2659732+y*(0.360768e-1+y*0.45813e-2)))));
-  } 
-  else 
+  }
+  else
   {
     y = 3.75/ax;
     ans = (exp(ax)/sqrt(ax));
     a = y*(0.916281e-2+y*(-0.2057706e-1+y*(0.2635537e-1+y*(-0.1647633e-1+y*0.392377e-2))));
-    ans = ans*(0.39894228 + y*(0.1328592e-1 +y*(0.225319e-2+y*(-0.157565e-2+a))));    
+    ans = ans*(0.39894228 + y*(0.1328592e-1 +y*(0.225319e-2+y*(-0.157565e-2+a))));
   }
   return ans;
 }
@@ -92,14 +92,14 @@ double bessi0(double x)
 double bessi1(double x)
 {
   double ax,ans;
-  double y; 
+  double y;
   if ((ax = fabs(x)) < 3.75)
-  { 
+  {
     y = x/3.75;
     y *= y;
     ans = ax*(0.5+y*(0.87890594+y*(0.51498869+y*(0.15084934+y*(0.2658733e-1+y*(0.301532e-2+y*0.32411e-3))))));
-  } 
-  else 
+  }
+  else
   {
     y = 3.75/ax;
     ans = 0.2282967e-1+y*(-0.2895312e-1+y*(0.1787654e-1-y*0.420059e-2));
@@ -111,11 +111,11 @@ double bessi1(double x)
 
 double Epsi(double snr)
 {
-  double val;    
-  val = 2 + snr*snr - (PI/8)*exp(-(snr*snr)/2)*((2+snr*snr)*bessi0((snr*snr)/4) + 
-        (snr*snr)*bessi1((snr*snr)/4))*((2+snr*snr)*bessi0((snr*snr)/4) + (snr*snr)*bessi1((snr*snr)/4));     
+  double val;
+  val = 2 + snr*snr - (PI/8)*exp(-(snr*snr)/2)*((2+snr*snr)*bessi0((snr*snr)/4) +
+        (snr*snr)*bessi1((snr*snr)/4))*((2+snr*snr)*bessi0((snr*snr)/4) + (snr*snr)*bessi1((snr*snr)/4));
   if (val<0.001) val = 1;
-  if (val>10) val = 1;    
+  if (val>10) val = 1;
   return val;
 }
 
@@ -123,7 +123,7 @@ double Epsi(double snr)
 void Average_block(float *ima,int x,int y,int z,int neighborhoodsize,float *average,double weight,int sx,int sy,int sz)
 {
   int x_pos,y_pos,z_pos;
-  int is_outside; 
+  int is_outside;
   int a,b,c,ns,sxy,index;
 
   extern int rician;
@@ -136,24 +136,24 @@ void Average_block(float *ima,int x,int y,int z,int neighborhoodsize,float *aver
         for (b = 0; b<ns;b++)
         {
             for (a = 0; a<ns;a++)
-            {   
+            {
                 is_outside = 0;
                 x_pos = x+a-neighborhoodsize;
                 y_pos = y+b-neighborhoodsize;
                 z_pos = z+c-neighborhoodsize;
-    
+
                 if ((z_pos < 0) || (z_pos > sz-1)) is_outside = 1;
                 if ((y_pos < 0) || (y_pos > sy-1)) is_outside = 1;
                 if ((x_pos < 0) || (x_pos > sx-1)) is_outside = 1;
-                
+
                 index = a + ns*b + ns*ns*c;
-        
+
         if (rician)
         {
                   if (is_outside)
                        average[index] += ima[z*(sxy)+(y*sx)+x]*ima[z*(sxy)+(y*sx)+x]*(float)weight;
                   else average[index] += ima[z_pos*(sxy)+(y_pos*sx)+x_pos]*ima[z_pos*(sxy)+(y_pos*sx)+x_pos]*(float)weight;
-        } 
+        }
         else
         {
           if (is_outside)
@@ -183,24 +183,24 @@ void Value_block(float *Estimate, unsigned char *Label,int x,int y,int z,int nei
         for (b = 0; b<ns;b++)
         {
             for (a = 0; a<ns;a++)
-            {       
+            {
                 is_outside = 0;
                 x_pos = x+a-neighborhoodsize;
                 y_pos = y+b-neighborhoodsize;
                 z_pos = z+c-neighborhoodsize;
-    
+
                 if ((z_pos < 0) || (z_pos > sz-1)) is_outside = 1;
                 if ((y_pos < 0) || (y_pos > sy-1)) is_outside = 1;
                 if ((x_pos < 0) || (x_pos > sx-1)) is_outside = 1;
-                
+
                 if (!is_outside)
-                {       
+                {
                     value = (double)Estimate[z_pos*(sxy)+(y_pos*sx)+x_pos];
-                    value += ((double)average[count]/global_sum);                    
-                    
+                    value += ((double)average[count]/global_sum);
+
                     label = Label[(x_pos + y_pos*sx + z_pos*sxy)];
                     Estimate[z_pos*(sxy)+(y_pos*sx)+x_pos] = (float)value;
-                    Label[(x_pos + y_pos*sx + z_pos *sxy)] = label + 1;      
+                    Label[(x_pos + y_pos*sx + z_pos *sxy)] = label + 1;
                 }
                 count++;
             }
@@ -217,17 +217,17 @@ double distance(float* ima,int x,int y,int z,int nx,int ny,int nz,int f,int sx,i
   for (k = -f; k <= f; k++)
   {
     nk1 = z+k;
-    nk2 = nz+k;  
+    nk2 = nz+k;
     if (nk1<0) nk1 = -nk1;
     if (nk2<0) nk2 = -nk2;
-    if (nk1>= sz) nk1 = 2*sz-nk1-1;    
+    if (nk1>= sz) nk1 = 2*sz-nk1-1;
     if (nk2>= sz) nk2 = 2*sz-nk2-1;
 
     for (j = -f; j <= f; j++)
     {
       nj1 = y+j;
-      nj2 = ny+j;    
-      if (nj1<0) nj1 = -nj1;    
+      nj2 = ny+j;
+      if (nj1<0) nj1 = -nj1;
       if (nj2<0) nj2 = -nj2;
       if (nj1>= sy) nj1 = 2*sy-nj1-1;
       if (nj2>= sy) nj2 = 2*sy-nj2-1;
@@ -235,14 +235,14 @@ double distance(float* ima,int x,int y,int z,int nx,int ny,int nz,int f,int sx,i
       for (i = -f; i<= f; i++)
       {
         ni1 = x+i;
-        ni2 = nx+i;    
+        ni2 = nx+i;
         if (ni1<0) ni1 = -ni1;
-        if (ni2<0) ni2 = -ni2;    
+        if (ni2<0) ni2 = -ni2;
         if (ni1>= sx) ni1 = 2*sx-ni1-1;
         if (ni2>= sx) ni2 = 2*sx-ni2-1;
-      
+
         d = ((double)ima[nk1*(sx*sy)+(nj1*sx)+ni1]-(double)ima[nk2*(sx*sy)+(nj2*sx)+ni2]);
-        distancetotal += d*d;   
+        distancetotal += d*d;
       }
     }
   }
@@ -260,34 +260,34 @@ double distance2(float *ima,float *medias,int x,int y,int z,int nx,int ny,int nz
 
   acu = 0;
   distancetotal = 0;
-    
+
   for (k = -f; k <= f; k++)
   {
     nk1 = z+k;
-    nk2 = nz+k;  
+    nk2 = nz+k;
     if (nk1<0) nk1 = -nk1;
     if (nk2<0) nk2 = -nk2;
-    if (nk1>= sz) nk1 = 2*sz-nk1-1;    
+    if (nk1>= sz) nk1 = 2*sz-nk1-1;
     if (nk2>= sz) nk2 = 2*sz-nk2-1;
     for (j = -f; j <= f; j++)
     {
       nj1 = y+j;
-      nj2 = ny+j;    
-      if (nj1<0) nj1 = -nj1;    
+      nj2 = ny+j;
+      if (nj1<0) nj1 = -nj1;
       if (nj2<0) nj2 = -nj2;
       if (nj1>= sy) nj1 = 2*sy-nj1-1;
       if (nj2>= sy) nj2 = 2*sy-nj2-1;
       for (i = -f; i <= f; i++)
       {
         ni1 = x+i;
-        ni2 = nx+i;    
+        ni2 = nx+i;
         if (ni1<0) ni1 = -ni1;
-        if (ni2<0) ni2 = -ni2;    
+        if (ni2<0) ni2 = -ni2;
         if (ni1>= sx) ni1 = 2*sx-ni1-1;
         if (ni2>= sx) ni2 = 2*sx-ni2-1;
-            
-        d = ((double)ima[nk1*(sx*sy)+(nj1*sx)+ni1]-(double)medias[nk1*(sx*sy)+(nj1*sx)+ni1])-((double)ima[nk2*(sx*sy)+(nj2*sx)+ni2]-(double)medias[nk2*(sx*sy)+(nj2*sx)+ni2]);            
-        distancetotal += d*d;              
+
+        d = ((double)ima[nk1*(sx*sy)+(nj1*sx)+ni1]-(double)medias[nk1*(sx*sy)+(nj1*sx)+ni1])-((double)ima[nk2*(sx*sy)+(nj2*sx)+ni2]-(double)medias[nk2*(sx*sy)+(nj2*sx)+ni2]);
+        distancetotal += d*d;
       }
     }
   }
@@ -311,7 +311,7 @@ void Regularize(float *in,float *out,int r,int sx,int sy,int sz)
   for (i = 0; i<sx; i++)
   {
     if (in[k*(sx*sy)+(j*sx)+i] == 0.0) continue;
-  
+
     acu = 0;
     ind = 0;
     for (ii = -r; ii <= r; ii++)
@@ -321,11 +321,11 @@ void Regularize(float *in,float *out,int r,int sx,int sy,int sz)
       if (ni>= sx) ni = 2*sx-ni-1;
       if (in[k*(sx*sy)+(j*sx)+ni]>0)
       {
-        acu+= (double)in[k*(sx*sy)+(j*sx)+ni];            
-        ind++;      
+        acu+= (double)in[k*(sx*sy)+(j*sx)+ni];
+        ind++;
       }
     }
-    if (ind == 0) ind = 1; 
+    if (ind == 0) ind = 1;
     out[k*(sx*sy)+(j*sx)+i] = (float)acu/ind;
   }
 
@@ -334,18 +334,18 @@ void Regularize(float *in,float *out,int r,int sx,int sy,int sz)
   for (i = 0;i<sx;i++)
   {
     if (out[k*(sx*sy)+(j*sx)+i] == 0) continue;
-  
+
     acu = 0;
     ind = 0;
     for (jj = -r; jj <= r; jj++)
-    { 
-      nj = j+jj;      
-      if (nj<0) nj = -nj;     
+    {
+      nj = j+jj;
+      if (nj<0) nj = -nj;
       if (nj>= sy) nj = 2*sy-nj-1;
       if (out[k*(sx*sy)+(nj*sx)+i]>0)
       {
-        acu+= (double)out[k*(sx*sy)+(nj*sx)+i];            
-        ind++;        
+        acu+= (double)out[k*(sx*sy)+(nj*sx)+i];
+        ind++;
       }
     }
     if (ind == 0) ind = 1;
@@ -357,18 +357,18 @@ void Regularize(float *in,float *out,int r,int sx,int sy,int sz)
   for (i = 0;i<sx;i++)
   {
     if (temp[k*(sx*sy)+(j*sx)+i] == 0) continue;
-  
+
     acu = 0;
     ind = 0;
     for (kk = -r; kk <= r; kk++)
     {
-      nk = k+kk;          
-      if (nk<0) nk = -nk;         
-      if (nk>= sz) nk = 2*sz-nk-1;        
+      nk = k+kk;
+      if (nk<0) nk = -nk;
+      if (nk>= sz) nk = 2*sz-nk-1;
       if (temp[nk*(sx*sy)+(j*sx)+i]>0)
       {
-        acu+= temp[nk*(sx*sy)+(j*sx)+i];            
-        ind++;        
+        acu+= temp[nk*(sx*sy)+(j*sx)+i];
+        ind++;
       }
     }
     if (ind == 0) ind = 1;
@@ -389,27 +389,27 @@ void* ThreadFunc( void* pArguments )
   double epsilon,mu1,var1,totalweight,wmax,t1,t1i,t2,d,w,distanciaminima;
   unsigned char *Label;
   int rows,cols,slices,ini,fin,v,f,i,j,k,l,rc,ii,jj,kk,ni,nj,nk,Ndims;
-    
+
   extern int rician;
   extern double max;
-    
+
   myargument arg;
   arg=*(myargument *) pArguments;
 
-  rows = arg.rows;    
+  rows = arg.rows;
   cols = arg.cols;
   slices = arg.slices;
-  ini = arg.ini;    
+  ini = arg.ini;
   fin = arg.fin;
-  ima = arg.in_image;    
-  means = arg.means_image;  
-  variances = arg.var_image;     
+  ima = arg.in_image;
+  means = arg.means_image;
+  variances = arg.var_image;
   Estimate = arg.estimate;
   bias = arg.bias;
-  Label = arg.label;    
+  Label = arg.label;
   v = arg.radioB;
-  f = arg.radioS;    
-                      
+  f = arg.radioS;
+
   /* filter */
   epsilon = 1e-5;
   mu1 = 0.95;
@@ -425,14 +425,14 @@ void* ThreadFunc( void* pArguments )
   for (k = ini; k<fin; k+= 2)
   for (j = 0;  j<rows; j+= 2)
   for (i = 0;  i<cols; i+= 2)
-  { 
-    /* init */  
-    for (l = 0 ; l < Ndims; l++) average[l] = 0.0;     
-    totalweight = 0.0;                                                
+  {
+    /* init */
+    for (l = 0 ; l < Ndims; l++) average[l] = 0.0;
+    totalweight = 0.0;
     distanciaminima = 1e15;
-       
+
     if (ima[(k*rc)+(j*cols)+i]>0 && (means[(k*rc)+(j*cols)+i])>epsilon && (variances[(k*rc)+(j*cols)+i]>epsilon))
-    {                    
+    {
        /* calculate minimum distance */
        for (kk = -v;kk<= v;kk++)
        {
@@ -442,19 +442,19 @@ void* ThreadFunc( void* pArguments )
            nj = j+jj;
            for (ii = -v;ii<= v;ii++)
            {
-              ni = i+ii;                                                        
-              if (ii == 0 && jj == 0 && kk == 0) continue;              
+              ni = i+ii;
+              if (ii == 0 && jj == 0 && kk == 0) continue;
 
               if (ni>= 0 && nj>= 0 && nk>= 0 && ni<cols && nj<rows && nk<slices)
-              {                                 
+              {
                 if (ima[(nk*rc)+(nj*cols)+ni]>0 && (means[(nk*rc)+(nj*cols)+ni])> epsilon && (variances[(nk*rc)+(nj*cols)+ni]>epsilon))
-                {               
-                  t1 = ((double)means[(k*rc)+(j*cols)+i])/((double)means[(nk*rc)+(nj*cols)+ni]);  
-                  t1i =  (max-(double)means[(k*rc)+(j*cols)+i])/(max-(double)means[(nk*rc)+(nj*cols)+ni]);  
+                {
+                  t1 = ((double)means[(k*rc)+(j*cols)+i])/((double)means[(nk*rc)+(nj*cols)+ni]);
+                  t1i =  (max-(double)means[(k*rc)+(j*cols)+i])/(max-(double)means[(nk*rc)+(nj*cols)+ni]);
                   t2 = ((double)variances[(k*rc)+(j*cols)+i])/((double)variances[(nk*rc)+(nj*cols)+ni]);
-    
+
                   if ( (t1>mu1 && t1<(1.0/mu1)) || ((t1i>mu1 && t1i<(1.0/mu1)) && t2>var1 && t2<(1.0/var1)))
-                  {                                                         
+                  {
                     d = distance2(ima,means,i,j,k,ni,nj,nk,f,cols,rows,slices);
                     if (d<distanciaminima) distanciaminima = d;
                   }
@@ -462,9 +462,9 @@ void* ThreadFunc( void* pArguments )
               }
             }
           }
-        }                
-        if (distanciaminima == 0) distanciaminima = 1; 
-         
+        }
+        if (distanciaminima == 0) distanciaminima = 1;
+
         /* rician correction */
         if (rician)
         {
@@ -476,17 +476,17 @@ void* ThreadFunc( void* pArguments )
                 ni = i+ii;
                 for (jj = -f;jj<= f;jj++)
                 {
-                    nj = j+jj;                          
+                    nj = j+jj;
                     if (ni>= 0 && nj>= 0 && nk>= 0 && ni<cols && nj<rows && nk<slices)
-                    {   
-                       if (distanciaminima == 1e15) bias[(nk*rc)+(nj*cols)+ni] = 0.0; 
-                       else bias[(nk*rc)+(nj*cols)+ni] = (float)distanciaminima;                                  
+                    {
+                       if (distanciaminima == 1e15) bias[(nk*rc)+(nj*cols)+ni] = 0.0;
+                       else bias[(nk*rc)+(nj*cols)+ni] = (float)distanciaminima;
                     }
                  }
               }
            }
          }
-         
+
          /* block filtering */
          for (kk = -v;kk<= v;kk++)
          {
@@ -496,56 +496,56 @@ void* ThreadFunc( void* pArguments )
               nj = j+jj;
               for (ii = -v;ii<= v;ii++)
               {
-                ni = i+ii;                                                      
-                if (ii == 0 && jj == 0 && kk == 0) continue; 
-                
+                ni = i+ii;
+                if (ii == 0 && jj == 0 && kk == 0) continue;
+
                 if (ni>= 0 && nj>= 0 && nk>= 0 && ni<cols && nj<rows && nk<slices)
-                {                                   
+                {
                     if (ima[(nk*rc)+(nj*cols)+ni]>0 && (means[(nk*rc)+(nj*cols)+ni])> epsilon && (variances[(nk*rc)+(nj*cols)+ni]>epsilon))
-                    {               
-                        t1 = ((double)means[(k*rc)+(j*cols)+i])/((double)means[(nk*rc)+(nj*cols)+ni]);  
-                        t1i =  (max-(double)means[(k*rc)+(j*cols)+i])/(max-(double)means[(nk*rc)+(nj*cols)+ni]);  
+                    {
+                        t1 = ((double)means[(k*rc)+(j*cols)+i])/((double)means[(nk*rc)+(nj*cols)+ni]);
+                        t1i =  (max-(double)means[(k*rc)+(j*cols)+i])/(max-(double)means[(nk*rc)+(nj*cols)+ni]);
                         t2 = ((double)variances[(k*rc)+(j*cols)+i])/((double)variances[(nk*rc)+(nj*cols)+ni]);
-    
+
                         if ( (t1>mu1 && t1<(1.0/mu1)) || ((t1i>mu1 && t1i<(1.0/mu1)) && t2>var1 && t2<(1.0/var1)))
-                        {                                                       
+                        {
                             d = distance(ima,i,j,k,ni,nj,nk,f,cols,rows,slices);
-                                       
+
                             if (d>3*distanciaminima) w = 0;
-                            else w = exp(-d/distanciaminima);                                               
-                                        
+                            else w = exp(-d/distanciaminima);
+
                             if (w>wmax) wmax = w;
-                                        
+
                             if (w>0)
                             {
-                               Average_block(ima,ni,nj,nk,f,average,w,cols,rows,slices);                                                                            
+                               Average_block(ima,ni,nj,nk,f,average,w,cols,rows,slices);
                                totalweight = totalweight + w;
                             }
                         }
-                    }                           
+                    }
                  }
               }
-           }                           
+           }
         }
-                
-        if (wmax == 0.0) wmax = 1.0;                        
-        Average_block(ima,i,j,k,f,average,wmax,cols,rows,slices);                   
-        totalweight = totalweight + wmax;                                        
-        Value_block(Estimate,Label,i,j,k,f,average,totalweight,cols,rows,slices);               
+
+        if (wmax == 0.0) wmax = 1.0;
+        Average_block(ima,i,j,k,f,average,wmax,cols,rows,slices);
+        totalweight = totalweight + wmax;
+        Value_block(Estimate,Label,i,j,k,f,average,totalweight,cols,rows,slices);
     }
-    else 
-    {           
-      wmax = 1.0;  
-      Average_block(ima,i,j,k,f,average,wmax,cols,rows,slices); 
+    else
+    {
+      wmax = 1.0;
+      Average_block(ima,i,j,k,f,average,wmax,cols,rows,slices);
       totalweight = totalweight + wmax;
       Value_block(Estimate,Label,i,j,k,f,average,totalweight,cols,rows,slices);
     }
   }
 
 #if defined(_WIN32)
-  _endthreadex(0);    
+  _endthreadex(0);
 #else
-  pthread_exit(0);    
+  pthread_exit(0);
 #endif
 
   free(average);
@@ -563,7 +563,7 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
 
   extern int rician;
 
-  myargument *ThreadArgs;  
+  myargument *ThreadArgs;
 
 #if defined(_WIN32)
   HANDLE *ThreadList; /* Handles to the worker threads*/
@@ -603,7 +603,7 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
         for (i = 0;i<dims[0];i++)
         {
             if (ima[k*(slice)+(j*dims[0])+i]>max) max = (double)ima[k*(slice)+(j*dims[0])+i];
-            
+
             mean = 0.0;
             indice = 0;
             for (ii = -1;ii<= 1;ii++)
@@ -613,20 +613,20 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
                     for (kk = -1;kk<= 1;kk++)
                     {
                         ni = i+ii;
-                        nj = j+jj;                
+                        nj = j+jj;
                         nk = k+kk;
-                        
+
                         if (ni<0) ni = -ni;
                         if (nj<0) nj = -nj;
                         if (nk<0) nk = -nk;
                         if (ni>= dims[0]) ni = 2*dims[0]-ni-1;
                         if (nj>= dims[1]) nj = 2*dims[1]-nj-1;
                         if (nk>= dims[2]) nk = 2*dims[2]-nk-1;
-                        
-                                
+
+
                         mean += (double)ima[nk*(slice)+(nj*dims[0])+ni];
-                        indice++;                
-                    
+                        indice++;
+
                     }
                 }
             }
@@ -651,8 +651,8 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
                     for (kk = -1;kk<= 1;kk++)
                     {
                         ni = i+ii;
-                        nj = j+jj;                
-                        nk = k+kk;                
+                        nj = j+jj;
+                        nk = k+kk;
                         if (ni>= 0 && nj>= 0 && nk>0 && ni<dims[0] && nj<dims[1] && nk<dims[2])
                             {
                             d = (double)ima[nk*(slice)+(nj*dims[0])+ni]-(double)means[k*(slice)+(j*dims[0])+i];
@@ -681,31 +681,31 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
   ThreadArgs = (myargument*) malloc( Nthreads*sizeof(myargument));
 
   for (i=0; i<Nthreads; i++)
- {         
+ {
 	/* Make Thread Structure   */
     ini = (i*dims[2])/Nthreads;
-    fin = ((i+1)*dims[2])/Nthreads;            
+    fin = ((i+1)*dims[2])/Nthreads;
     ThreadArgs[i].cols = dims[0];
     ThreadArgs[i].rows = dims[1];
     ThreadArgs[i].slices = dims[2];
-    ThreadArgs[i].in_image = ima;   
+    ThreadArgs[i].in_image = ima;
     ThreadArgs[i].var_image = variances;
-    ThreadArgs[i].means_image = means;  
+    ThreadArgs[i].means_image = means;
     ThreadArgs[i].estimate = Estimate;
-    ThreadArgs[i].bias = bias;    
-    ThreadArgs[i].label = Label;    
+    ThreadArgs[i].bias = bias;
+    ThreadArgs[i].label = Label;
     ThreadArgs[i].ini = ini;
     ThreadArgs[i].fin = fin;
     ThreadArgs[i].radioB = v;
-    ThreadArgs[i].radioS = f;  
-    	
+    ThreadArgs[i].radioS = f;
+
     ThreadList[i] = (HANDLE)_beginthreadex( (void *)NULL, 0, &ThreadFunc, &ThreadArgs[i] , 0, (unsigned *)NULL );
-        
+
  }
-    
+
   for (i=0; i<Nthreads; i++) { WaitForSingleObject(ThreadList[i], INFINITE); }
   for (i=0; i<Nthreads; i++) { CloseHandle( ThreadList[i] ); }
-    
+
 #else
 
   /* Reserve room for handles of threads in ThreadList*/
@@ -713,23 +713,23 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
   ThreadArgs = (myargument*) calloc( Nthreads,sizeof(myargument));
 
   for (i=0; i<Nthreads; i++)
-  {         
+  {
 	/* Make Thread Structure   */
     ini = (i*dims[2])/Nthreads;
-    fin = ((i+1)*dims[2])/Nthreads;  
+    fin = ((i+1)*dims[2])/Nthreads;
     ThreadArgs[i].cols = dims[0];
     ThreadArgs[i].rows = dims[1];
     ThreadArgs[i].slices = dims[2];
-    ThreadArgs[i].in_image = ima;   
+    ThreadArgs[i].in_image = ima;
     ThreadArgs[i].var_image = variances;
-    ThreadArgs[i].means_image = means;  
+    ThreadArgs[i].means_image = means;
     ThreadArgs[i].estimate = Estimate;
-    ThreadArgs[i].bias = bias;    
-    ThreadArgs[i].label = Label;    
+    ThreadArgs[i].bias = bias;
+    ThreadArgs[i].label = Label;
     ThreadArgs[i].ini = ini;
     ThreadArgs[i].fin = fin;
     ThreadArgs[i].radioB = v;
-    ThreadArgs[i].radioS = f;  
+    ThreadArgs[i].radioS = f;
   }
 
   for (i=0; i<Nthreads; i++)
@@ -738,28 +738,28 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
     {
        printf("Threads cannot be created\n");
        exit(1);
-    }        
+    }
   }
-  
+
   for (i=0; i<Nthreads; i++)
     pthread_join(ThreadList[i],NULL);
 
 #endif
-    
+
   if (rician)
   {
-    r = 5;  
+    r = 5;
     Regularize(bias,variances,r,dims[0],dims[1],dims[2]);
     for (i = 0;i<vol;i++)
     {
-      if (variances[i]>0.0) 
+      if (variances[i]>0.0)
       {
-        SNR = (double)means[i]/sqrt((double)variances[i]);      
-        bias[i] = 2*(variances[i]/(float)Epsi(SNR));      
+        SNR = (double)means[i]/sqrt((double)variances[i]);
+        bias[i] = 2*(variances[i]/(float)Epsi(SNR));
 #if defined(_WIN32)
-        if (_isnan(bias[i])) bias[i] = 0.0;     
+        if (_isnan(bias[i])) bias[i] = 0.0;
 #else
-        if (isnan(bias[i])) bias[i] = 0.0;     
+        if (isnan(bias[i])) bias[i] = 0.0;
 #endif
       }
     }
@@ -777,10 +777,10 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
       estimate /= (double)label;
       if (rician)
       {
-         estimate = (estimate-(double)bias[i])<0?0:(estimate-(double)bias[i]);                    
+         estimate = (estimate-(double)bias[i])<0?0:(estimate-(double)bias[i]);
          ima[i] = (float)sqrt(estimate);
       }
-      else ima[i] = (float)estimate;  
+      else ima[i] = (float)estimate;
     }
   }
 
@@ -795,4 +795,3 @@ void anlm(float* ima, int v, int f, int use_rician, const int* dims)
   return;
 
 }
-

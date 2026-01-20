@@ -232,19 +232,6 @@ github.com/pygpc-polynomial-chaos/pygpc/blob/master/LICENSE\
 Konstantin Weise
 
 
-PyQt5
-=======
-www.riverbankcomputing.com/software/pyqt/intro\
-**License and link to online license text (if existing):**\
-GNU General Public License (GPL), Version 3
-or a commercial License\
-www.riverbankcomputing.com/commercial/license-faq\
-**Copyright**\
-(c) Riverbank Computing Limited\
-**Remarks**\
-used by simnibs_gui
-
-
 Python
 =======
 www.python.org

@@ -1,9 +1,6 @@
 # SimNIBS specific
 bin/
-simnibs/matlab_tools/SIMNIBSDIR.m
-simnibs/matlab_tools/SIMNIBSPYTHON.m
-simnibs/matlab_tools/simnibs
-simnibs/matlab_tools/simnibs.cmd
+
 simnibs/resources/spm12/
 activate_simnibs
 uninstall_simnibs
