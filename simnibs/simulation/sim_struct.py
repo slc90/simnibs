@@ -52,7 +52,6 @@ def remove_None(src):
     return src
 
 
-from .. import __version__
 from ..utils.csv_reader import _get_eeg_positions, read_csv_positions
 from ..utils.transformations import project_points_on_surface
 from . import electrode_placement, fem
@@ -419,7 +418,7 @@ class SESSION(object):
         )
         fh = logging.FileHandler(log_fn, mode="w")
         formatter = logging.Formatter(
-            f"[ %(name)s {__version__} - %(asctime)s - %(process)d ]%(levelname)s: %(message)s"
+            f"[ %(name)s - %(asctime)s - %(process)d ]%(levelname)s: %(message)s"
         )
         fh.setFormatter(formatter)
         fh.setLevel(logging.DEBUG)

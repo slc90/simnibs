@@ -19,7 +19,6 @@ from scipy.optimize import (
     minimize,
 )
 
-from simnibs import __version__
 from simnibs.mesh_tools import mesh_io, surface
 from simnibs.simulation.fem import get_dirichlet_node_index_cog
 from simnibs.simulation.onlinefem import FemTargetPointCloud, OnlineFEM
@@ -579,7 +578,7 @@ class TesFlexOptimization:
         log_fn = os.path.join(self.output_folder, f"{fname_prefix}_{self.time_str}.log")
         fh = logging.FileHandler(log_fn, mode="w")
         formatter = logging.Formatter(
-            f"[ %(name)s {__version__} - %(asctime)s - %(process)d ]%(levelname)s: %(message)s"
+            f"[ %(name)s - %(asctime)s - %(process)d ]%(levelname)s: %(message)s"
         )
         fh.setFormatter(formatter)
         fh.setLevel(logging.DEBUG)

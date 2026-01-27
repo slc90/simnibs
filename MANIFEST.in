@@ -11,3 +11,7 @@ graft simnibs/segmentation/atlases/charm_atlas_mni
 # Excluding top level folders (because scm includes them automatically)
 prune docs
 prune packing
+prune data
+prune paper
+prune include
+prune lib

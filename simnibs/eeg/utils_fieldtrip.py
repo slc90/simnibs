@@ -1,16 +1,15 @@
 from pathlib import Path
 from typing import Union
 
-from nibabel.affines import apply_affine
 import numpy as np
+from nibabel.affines import apply_affine
 from scipy.io import loadmat
 
 import simnibs
+from simnibs.mesh_tools.mesh_io import load_subject_surfaces
 from simnibs.utils.csv_reader import write_csv_positions
 from simnibs.utils.file_finder import SubjectFiles
 from simnibs.utils.transformations import make_cross_subject_morph
-
-from simnibs.mesh_tools.mesh_io import load_subject_surfaces
 
 # EEG MONTAGE
 
@@ -53,7 +52,9 @@ def setup_source_space(
     # if surface is subsampled, add normals from original surface
     normals = (
         {
-            h: np.loadtxt(m2m.get_morph_data(h, "normals.csv", subsampling), delimiter=",")
+            h: np.loadtxt(
+                m2m.get_morph_data(h, "normals.csv", subsampling), delimiter=","
+            )
             for h in src_from
         }
         if subsampling
@@ -165,9 +166,8 @@ def make_forward(forward: dict, src: dict):
         leadfield=fwd_cell,
         label=labels,
         leadfielddimord=r"{pos}_chan_ori",
-        cfg=f"Created by SimNIBS {simnibs.__version__}",
+        cfg="Created by SimNIBS",
     )
-
 
 
 def prepare_montage(

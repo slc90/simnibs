@@ -31,7 +31,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from simnibs import SIMNIBSDIR, __version__, file_finder
+from simnibs import SIMNIBSDIR, file_finder
 
 if sys.platform == "win32":
     import winreg
@@ -43,7 +43,7 @@ if sys.platform == "win32":
 #    os.environ['QT_PLUGIN_PATH']=os.path.join('/', *script_path[:idx[-1]+1], 'plugins')
 #    print(f'setting QT_PLUGIN_PATH to: {os.environ["QT_PLUGIN_PATH"]}')
 
-MINOR_VERSION = ".".join(__version__.split(".")[:2])
+MINOR_VERSION = "4.5"
 
 
 def create_scripts(dest_dir):
@@ -496,8 +496,8 @@ def _create_apps(install_dir):
         CFBundleDisplayName="SimNIBS GUI",
         CFBundleName="SimNIBS GUI",
         CFBundleIdentifier="org.simnibs",
-        CFBundleShortVersionString=__version__,
-        CFBundleGetInfoString=f"SimNIBS GUI {__version__}",
+        CFBundleShortVersionString="4.5.0",
+        CFBundleGetInfoString="SimNIBS GUI 4.5.0",
         CFBundleIconFile="gui_icon.icns",
         CFBundleExecutable="simnibs_gui",
         CFBundleInfoDictionaryVersion="6.0",
@@ -897,7 +897,7 @@ if GUI:
 
             self.setLayout(mainLayout)
 
-            self.setWindowTitle(f"SimNIBS {__version__} Post-Install Options")
+            self.setWindowTitle("SimNIBS 4.5.0 Post-Install Options")
             gui_icon = os.path.join(
                 SIMNIBSDIR, "_internal_resources", "icons", "simnibs", "gui_icon.ico"
             )
@@ -980,7 +980,7 @@ if GUI:
             mainLayout = QtWidgets.QVBoxLayout()
             mainLayout.addWidget(
                 QtWidgets.QLabel(
-                    f"SimNIBS version {__version__} will be uninstalled. Are you sure?"
+                    "SimNIBS version 4.5.0 will be uninstalled. Are you sure?"
                 )
             )
             mainLayout.addWidget(button_box)
@@ -1218,7 +1218,7 @@ def main():
         action="store_true",
         help="Ignores all other arguments and uninstall SimNIBS",
     )
-    parser.add_argument("--version", action="version", version=__version__)
+
     args = parser.parse_args(sys.argv[1:])
     install_dir = os.path.abspath(os.path.expanduser(args.target_dir))
     if args.uninstall:

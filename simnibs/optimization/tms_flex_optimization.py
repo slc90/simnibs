@@ -30,7 +30,6 @@ from simnibs.utils.region_of_interest import (
 )
 from simnibs.utils.roi_result_visualization import RoiResultVisualization
 
-from .. import __version__
 from ..simulation.sim_struct import POSITION
 from ..utils.file_finder import SubjectFiles
 from ..utils.mesh_element_properties import ElementTags
@@ -370,7 +369,7 @@ class TmsFlexOptimization:
         )
         fh = logging.FileHandler(log_fn, mode="w")
         formatter = logging.Formatter(
-            f"[ %(name)s {__version__} - %(asctime)s - %(process)d ]%(levelname)s: %(message)s"
+            f"[ %(name)s - %(asctime)s - %(process)d ]%(levelname)s: %(message)s"
         )
         fh.setFormatter(formatter)
         fh.setLevel(logging.DEBUG)

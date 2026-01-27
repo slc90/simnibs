@@ -6,9 +6,9 @@
     * [ ] ~~poetry安装python库~~
     * [ ] ~~保留simnibs中有用的源码部分~~
   * [ ] 把相关的python源码和C++源码一起做成exe并开源
-    * [ ] github fork Simnibs的仓库
+    * [x] github fork Simnibs的仓库
     * [ ] 去掉无用内容
-    * [ ] 去掉conda相关
+    * [x] 去掉conda相关
     * [ ] 打包成exe
 # 算法
   * [ ] 列举simnibs中可使用的参数
@@ -18,5 +18,6 @@
     * [ ] DIviding RECTangles (DIRECT)
     * [ ] Differential Evolution
   * [ ] 如何自定义算法
+  * [ ] 如何自定义目标函数
 # 可视化
   * [ ] 文件格式

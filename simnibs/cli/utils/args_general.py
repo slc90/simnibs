@@ -1,4 +1,3 @@
-from simnibs import __version__
 from .helpers import CommandLineArgument
 
 subid = CommandLineArgument(
@@ -12,11 +11,12 @@ subid = CommandLineArgument(
     ),
 )
 
-version = CommandLineArgument(
-    ["-v", "--version"], dict(action="version", version=__version__)
-)
 
 debug = CommandLineArgument(
-    ['--debug'],
-    dict(action='store_true', default=False,
-        help="""Write results from intermediate steps to disk."""))
+    ["--debug"],
+    dict(
+        action="store_true",
+        default=False,
+        help="""Write results from intermediate steps to disk.""",
+    ),
+)

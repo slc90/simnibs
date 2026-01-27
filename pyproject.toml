@@ -3,13 +3,11 @@ name = "simnibs"
 version = "0.1.0"
 description = "Simulation of Non-Invasive Brain Stimulation"
 readme = "README.md"
-requires-python = "3.11.*"
+requires-python = ">=3.11,<3.12.dev0"
 license = { text = "GPL-3.0-only" }
-authors = [
-  { name = "SimNIBS developers", email = "support@simnibs.org" }
-]
+authors = [{ name = "SimNIBS developers", email = "support@simnibs.org" }]
 maintainers = []
-dynamic = [ "dependencies" ]
+dynamic = ["dependencies"]
 
 [tool.poetry.dependencies]
 cython = "3.0.11"
@@ -27,14 +25,58 @@ fmm3dpy = "1.0.0"
 samseg = "0.4a0"
 pygpc = "0.4.1"
 petsc4py = { url = "https://github.com/simnibs/petsc4py/releases/download/v3.21.5/petsc4py-3.21.5-cp311-cp311-win_amd64.whl" }
-
-[tool.poetry]
-package-mode = false
+pymumps = { path = "pymumps-0.3.3-cp311-cp311-win_amd64.whl" }
+setuptools-scm = "^9.2.2"
 
 [tool.poetry.group.dev.dependencies]
-pytest="8.3.3"
-mock="5.1.0"
+pytest = "8.3.3"
+mock = "5.1.0"
 
 [build-system]
-requires = ["poetry-core>=2.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = [
+    'setuptools>=68',
+    'wheel',
+    'build',
+    'numpy >= 1.26, < 2',
+    'cython',
+    'setuptools-scm>=8',
+]
+build-backend = 'setuptools.build_meta'
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["packing*", "docs*"]
+
+[project.scripts]
+charm = "simnibs.cli.charm:main"
+add_tissues_to_upsampled = "simnibs.cli.add_tissues_to_upsampled:main"
+calc_B = "simnibs.cli.calc_B:main"
+coil2nifti = "simnibs.cli.coil2nifti:main"
+charm_tms = "simnibs.cli.charm_tms:main"
+convert_3_to_4 = "simnibs.cli.convert_3_to_4:main"
+download_coils = "simnibs.cli.download_coils:main"
+eeg_positions = "simnibs.cli.eeg_positions:main"
+expand_to_center_surround = "simnibs.cli.expand_to_center_surround:main"
+get_eeg_positions = "simnibs.cli.get_eeg_positions:main"
+get_fields_at_coordinates = "simnibs.cli.get_fields_at_coordinates:main"
+maskmesh = "simnibs.cli.maskmesh:main"
+meshmesh = "simnibs.cli.meshmesh:main"
+mni2subject_coords = "simnibs.cli.mni2subject_coords:main"
+mni2subject = "simnibs.cli.mni2subject:main"
+msh2cortex = "simnibs.cli.msh2cortex:main"
+msh2nii = "simnibs.cli.msh2nii:main"
+nii2msh = "simnibs.cli.nii2msh:main"
+postinstall_simnibs = "simnibs.cli.postinstall_simnibs:main"
+prepare_eeg_forward = "simnibs.cli.prepare_eeg_forward:main"
+prepare_eeg_montage = "simnibs.cli.prepare_eeg_montage:main"
+prepare_tdcs_leadfield = "simnibs.cli.prepare_tdcs_leadfield:main"
+register = "simnibs.cli.register:main"
+simnibs = "simnibs.cli.run_simnibs:main"
+simnibs_gui = "simnibs.cli.simnibs_gui:main"
+subject2mni_coords = "simnibs.cli.subject2mni_coords:main"
+subject2mni = "simnibs.cli.subject2mni:main"
+subject_atlas = "simnibs.cli.subject_atlas:main"
