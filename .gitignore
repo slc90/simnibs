@@ -157,3 +157,7 @@ include/
 lib/
 pymumps-0.3.3-cp311-cp311-win_amd64.whl
 leadfield
+tes_optimize_ti_focality
+m2m_sub_with_T1
+m2m_sub_with_T1_T2
+ti_simulation_test

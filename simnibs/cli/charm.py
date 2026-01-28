@@ -28,41 +28,37 @@ import sys
 import textwrap
 import time
 
-from simnibs.segmentation import charm_main
+from simnibs.cli.utils import args_charm, args_general
 from simnibs.cli.utils.helpers import add_argument
-from simnibs.cli.utils import args_general, args_charm
+from simnibs.segmentation import charm_main
 
 
 def parseArguments(argv):
-
     usage_text = textwrap.dedent(
         """
+        CREATE HEAD MESH:
+            charm subID T1 {T2}
 
-CREATE HEAD MESH:
-    charm subID T1 {T2}
+        VISUAL CHECK OF RESULTS:
+            open the m2m_{subID}/results.html
 
-VISUAL CHECK OF RESULTS:
-    open the m2m_{subID}/results.html
+        RUN ONLY PARTS OF CHARM:
+            charm subID T1 T2 --registerT2  (registration of T2 to T1)
+            charm subID {T1} --initatlas  (initial affine registration of atlas to MR images)
+            charm subID --segment  (make label image, reconstruct surfaces, register to fsaverage and MNI)
+            charm subID --mesh  (create head mesh from label images)
 
-RUN ONLY PARTS OF CHARM:
-    charm subID T1 T2 --registerT2  (registration of T2 to T1)
-    charm subID {T1} --initatlas  (initial affine registration of atlas to MR images)
-    charm subID --segment  (make label image, reconstruct surfaces, register to fsaverage and MNI)
-    charm subID --mesh  (create head mesh from label images)
+            Note: Parts can be concatenated, e.g. charm subID --initatlas --segment
 
-    Note: Parts can be concatenated, e.g. charm subID --initatlas --segment
-
-MANUAL EDITING:
-    edit m2m_{subID}/label_prep/tissue_labeling_upsampled.nii.gz using a
-    viewer of your choice, then call charm subID --mesh to recreate head mesh
-
-    """
+        MANUAL EDITING:
+            edit m2m_{subID}/label_prep/tissue_labeling_upsampled.nii.gz using a
+            viewer of your choice, then call charm subID --mesh to recreate head mesh
+        """
     )
 
     parser = argparse.ArgumentParser(prog="charm", usage=usage_text)
 
     add_argument(parser, args_charm.subid)  # NB
-    add_argument(parser, args_general.version)
     add_argument(parser, args_charm.primary_image)
     add_argument(parser, args_charm.secondary_image)
     add_argument(parser, args_charm.register_t2)

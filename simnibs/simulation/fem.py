@@ -3,30 +3,28 @@
 Functions for assembling and solving FEM systems
 """
 
+import atexit
+import copy
 import gc
+import logging
 import multiprocessing
 import time
-import copy
 import warnings
-import atexit
+
 import h5py
-import logging
+import mumps
 import numpy as np
 import scipy.sparse as sparse
-from simnibs.mesh_tools import gmsh_view
-from simnibs.simulation.tms_coil.tms_coil import TmsCoil
+from petsc4py import PETSc
 
+from simnibs.mesh_tools import gmsh_view
+from simnibs.simulation import pardiso
+from simnibs.simulation.tms_coil.tms_coil import TmsCoil
 from simnibs.utils.mesh_element_properties import ElementTags
 
 from ..mesh_tools import mesh_io
 from ..utils import cond_utils as cond_lib
-
-import mumps
 from ..utils.simnibs_logger import logger
-
-from petsc4py import PETSc
-from simnibs.simulation import pardiso
-
 
 """
     This program is part of the SimNIBS package.
@@ -89,7 +87,6 @@ class KSPSolver:
         self._x = self.A.createVecRight()
 
     def setup_ksp(self, ksp_type, pc_type, factor_solver_type, rtol):
-
         # Build KSP solver object
         ksp = PETSc.KSP()
         ksp.create(comm=self.A.getComm())
@@ -118,7 +115,7 @@ class KSPSolver:
         start = time.perf_counter()
         ksp.setUp()
         logger.log(
-            self.log_level, f"Time to set up KSP: {time.perf_counter()-start:8.4f} s"
+            self.log_level, f"Time to set up KSP: {time.perf_counter() - start:8.4f} s"
         )
 
         self.ksp = ksp
@@ -127,7 +124,9 @@ class KSPSolver:
         start = time.perf_counter()
         self._b[:] = b
         self.ksp.solve(self._b, self._x)
-        logger.log(self.log_level, f"Time to solve: {time.perf_counter()-start:8.4f} s")
+        logger.log(
+            self.log_level, f"Time to solve: {time.perf_counter() - start:8.4f} s"
+        )
         return self._x[:]
 
     def solve(self, b: np.ndarray):
@@ -147,20 +146,22 @@ class MUMPS_Solver:
         start = time.time()
         self.ctx = mumps.Context()
         self.ctx.set_matrix(A, symmetric=isSymmetric)
-        logger.log(self.log_level, f"{time.time()-start:.2f} seconds to init solver")
+        logger.log(self.log_level, f"{time.time() - start:.2f} seconds to init solver")
         start = time.time()
         self.ctx.analyze()
-        logger.log(self.log_level, f"{time.time()-start:.2f} seconds to analyze matrix")
+        logger.log(
+            self.log_level, f"{time.time() - start:.2f} seconds to analyze matrix"
+        )
         start = time.time()
         self.ctx.factor()
         logger.log(
-            self.log_level, f"{time.time()-start:.2f} seconds to factorize matrix"
+            self.log_level, f"{time.time() - start:.2f} seconds to factorize matrix"
         )
 
     def solve(self, b):
         start = time.time()
         x = self.ctx._solve_dense(b)
-        logger.log(self.log_level, f"{time.time()-start:.2f} seconds to solve system")
+        logger.log(self.log_level, f"{time.time() - start:.2f} seconds to solve system")
         return x
 
 
@@ -266,8 +267,7 @@ def calc_fields(potentials, fields, cond=None, dadt=None, units="mm", E=None):
                 E = mesh_io.ElementData(E, name="E", mesh=out_mesh)
             if E.nr != out_mesh.elm.nr:
                 raise ValueError(
-                    "Provided E does not have the same number of"
-                    " samples as the mesh!"
+                    "Provided E does not have the same number of samples as the mesh!"
                 )
             if E.nr_comp != 3:
                 raise ValueError("Provided E does not have 3 components!")
@@ -679,7 +679,7 @@ class FEMSystem(object):
         self._A = _assemble_matrix(vols, G, th_nodes, cond, dof_map, units=self.units)
         if np.any(np.diff(self.A.indptr) == 0):
             raise ValueError(
-                "Found a column of zeros in the stiffness matrix" " disconected nodes?"
+                "Found a column of zeros in the stiffness matrix disconected nodes?"
             )
 
         time_assemble = time.time() - start
@@ -1125,9 +1125,9 @@ class DipoleFEM(FEMSystem):
         """
         dip_pos = np.atleast_2d(dip_pos).astype(float)
         dip_mom = np.atleast_2d(dip_mom).astype(float)
-        assert (
-            dip_pos.shape == dip_mom.shape
-        ), "`dip_pos` and `dip_mom` must have the same dimensions"
+        assert dip_pos.shape == dip_mom.shape, (
+            "`dip_pos` and `dip_mom` must have the same dimensions"
+        )
         n_dip = dip_pos.shape[0]
 
         if self.units == "mm":
@@ -1473,14 +1473,14 @@ def tdcs(
     potential: simnibs.msh.mesh_io.NodeData
         Total electric potential
     """
-    assert len(currents) == len(
-        electrode_surface_tags
-    ), "there should be one channel for each current"
+    assert len(currents) == len(electrode_surface_tags), (
+        "there should be one channel for each current"
+    )
 
     surf_tags = np.unique(mesh.elm.tag1[mesh.elm.elm_type == 2])
-    assert np.all(
-        np.isin(electrode_surface_tags, surf_tags)
-    ), "Could not find all the electrode surface tags in the mesh"
+    assert np.all(np.isin(electrode_surface_tags, surf_tags)), (
+        "Could not find all the electrode surface tags in the mesh"
+    )
 
     assert np.isclose(np.sum(currents), 0), "Currents should sum to 0"
 
@@ -1555,7 +1555,7 @@ def _sim_tdcs_pair(mesh, cond, ref_electrode, el_surf, el_c, units, solver_optio
         logger.info("Estimated current calibration error: {0:.1%}".format(error))
     else:
         logger.warning(
-            f"The current calibration error exceeded 10%! Estimated error value: {error*100:.2f}%"
+            f"The current calibration error exceeded 10%! Estimated error value: {error * 100:.2f}%"
         )
     del s
     gc.collect()
@@ -1833,9 +1833,9 @@ def tdcs_neumann(mesh, cond, currents, electrode_surface_tags):
     potential: simnibs.msh.mesh_io.NodeData
         Total electric potential
     """
-    assert len(electrode_surface_tags) == len(
-        currents
-    ), "Please define one current per electrode"
+    assert len(electrode_surface_tags) == len(currents), (
+        "Please define one current per electrode"
+    )
     assert np.isclose(np.sum(currents), 0.0), "Sum of currents must be zero"
     S = TDCSFEMNeumann(mesh, cond, electrode_surface_tags[0])
     b = S.assemble_rhs(electrode_surface_tags[1:], currents[1:])
@@ -1980,14 +1980,14 @@ def tdcs_leadfield(
 
     n_sims = len(electrode_surface) - 1
     currents = [current] * n_sims if isinstance(current, float) else current
-    assert (
-        len(currents) == n_sims
-    ), f"Number of currents ({len(currents)}) do not correspond to the number of simulations ({n_sims})"
+    assert len(currents) == n_sims, (
+        f"Number of currents ({len(currents)}) do not correspond to the number of simulations ({n_sims})"
+    )
 
     # Run simulations (sequential)
     if n_workers == 1:
         for i, (el_tag, current) in enumerate(zip(electrode_surface[1:], currents)):
-            logger.info(f"Running Simulation {i+1} of {n_sims}")
+            logger.info(f"Running Simulation {i + 1} of {n_sims}")
             b = S.assemble_rhs([el_tag], [current])
             v = S.solve(b)
 
@@ -2032,7 +2032,7 @@ def tdcs_leadfield(
                 error = np.abs(np.abs(flux[0]) - np.abs(flux[1])) / current_
                 if error > 0.1:
                     logger.warning(
-                        f"The current calibration error exceeded 10%! Estimated error value: {error*100:.2f}%"
+                        f"The current calibration error exceeded 10%! Estimated error value: {error * 100:.2f}%"
                     )
 
             E = np.vstack([-d.dot(v) for d in D]).T * 1e3
@@ -2165,7 +2165,7 @@ def _run_tdcs_leadfield(
         error = np.abs(np.abs(flux[0]) - np.abs(flux[1])) / current_
         if error > 0.1:
             logger.warning(
-                f"The current calibration error exceeded 10%! Estimated error value: {error*100:.2f}%"
+                f"The current calibration error exceeded 10%! Estimated error value: {error * 100:.2f}%"
             )
 
     # Calculate E and postprocessing
@@ -2285,7 +2285,7 @@ def tms_many_simulations(
     # Run sequentially
     if n_workers == 1:
         for i, matsimnibs, didt in zip(range(n_sims), matsimnibs_list, didt_list):
-            logger.info(f"Running Simulation {i+1} of {n_sims}")
+            logger.info(f"Running Simulation {i + 1} of {n_sims}")
             dAdt = _get_da_dt_from_coil(fn_coil, mesh, didt, matsimnibs)
             # b = S.assemble_tms_rhs(dAdt)
             b = S.assemble_rhs(dAdt)
@@ -2371,7 +2371,7 @@ def _run_tms_many_simulations(i, matsimnibs, didt, fn_hdf5, dataset):
     global tms_many_global_cond
     global tms_many_global_field
     global tms_many_global_roi
-    logger.info(f"Running Simulation {i+1} of {tms_many_global_nsims}")
+    logger.info(f"Running Simulation {i + 1} of {tms_many_global_nsims}")
     # RHS
     dAdt = _get_da_dt_from_coil(
         tms_many_global_fn_coil, tms_many_global_solver.mesh, didt, matsimnibs
@@ -2474,7 +2474,7 @@ def electric_dipole(
     assert dipole_moments.shape[1] == 3, "dipole_moments should be in Nx3 format!"
     if dipole_positions.shape[0] != dipole_moments.shape[0]:
         raise ValueError(
-            "Different number of entries for " "dipole_positions and dipole_moments"
+            "Different number of entries for dipole_positions and dipole_moments"
         )
 
     S = DipoleFEM(mesh, cond, solver_options, units)
