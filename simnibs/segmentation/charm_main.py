@@ -160,7 +160,6 @@ def run(
     showFigs = False
     showMovies = False
     visualizer = simnibs_samseg.initVisualizer(showFigs, showMovies)
-
     (
         template_name,
         atlas_settings,
@@ -236,11 +235,11 @@ def run(
             segment_settings,
             gmm_parameters,
             visualizer,
-            parameter_filename=os.path.join(
-                sub_files.segmentation_folder, "parameters.p"
-            )
-            if debug
-            else None,
+            parameter_filename=(
+                os.path.join(sub_files.segmentation_folder, "parameters.p")
+                if debug
+                else None
+            ),
         )
 
         # Okay now the parameters have been estimated, and we can segment the

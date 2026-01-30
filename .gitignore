@@ -161,3 +161,6 @@ tes_optimize_ti_focality
 m2m_sub_with_T1
 m2m_sub_with_T1_T2
 ti_simulation_test
+TI_leadfield_optimize
+ti_leadfield_free_optimize
+ti_leadfield_free_optimize_three_electrodes

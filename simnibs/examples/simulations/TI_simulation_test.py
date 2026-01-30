@@ -117,14 +117,15 @@ def forward_compute():
     # 设置导电率
     set_conductivity(
         tdcs_list=tdcs_list1,
-        anisotropy_type="scalar",
-        aniso_maxratio=10,
-        aniso_maxcond=2,
+        anisotropy_type="dir",
+        aniso_maxratio=8,
+        aniso_maxcond=1.5,
     )
     # 设置求解器
     # Parallel Direct Sparse Solver
     # 使用 Intel MKL 可能有商业问题？
-    tdcs_list1.solver_options = "pardiso"  # pyright: ignore[reportAttributeAccessIssue]
+    # tdcs_list1.solver_options = "pardiso"  # pyright: ignore[reportAttributeAccessIssue]
+    tdcs_list1.solver_options = "hypre"  # pyright: ignore[reportAttributeAccessIssue]
     tdcs_list2 = TDCSLIST()
     tdcs_list2.currents = [0.001, -0.001]
     electrode_4 = create_electrode(
@@ -176,11 +177,14 @@ def forward_compute():
 
 def post_process(output_folder: str):
     # 后处理
-    # 得到leadfield
-    m1 = mesh_io.read_msh(os.path.join(output_folder, "ernie_TDCS_1_scalar.msh"))
-    m2 = mesh_io.read_msh(os.path.join(output_folder, "ernie_TDCS_2_dir.msh"))
-    # remove all tetrahedra and triangles belonging to the electrodes so that
-    # the two meshes have same number of elements
+    # 读取正向计算得到的msh
+    m1: mesh_io.Msh = mesh_io.read_msh(
+        os.path.join(output_folder, "ernie_TDCS_1_dir.msh")
+    )
+    m2: mesh_io.Msh = mesh_io.read_msh(
+        os.path.join(output_folder, "ernie_TDCS_2_dir.msh")
+    )
+    # 保留需要的elements
     tags_keep = np.hstack(
         (
             np.arange(ElementTags.TH_START, ElementTags.SALINE_START - 1),
@@ -194,6 +198,7 @@ def post_process(output_folder: str):
     # calculate the maximal amplitude of the TI envelope
     ef1 = m1.field["E"]
     ef2 = m2.field["E"]
+    # 只支持2组电极的TI
     TImax = TI.get_maxTI(ef1.value, ef2.value)
     # make a new mesh for visualization of the field strengths
     # and the amplitude of the TI envelope
@@ -211,8 +216,8 @@ def post_process(output_folder: str):
 
 
 if __name__ == "__main__":
-    # t1 = time.time()
-    # forward_compute()
-    # t2 = time.time()
-    # print(f"Forward computation time: {t2 - t1:.2f} seconds")
+    t1 = time.time()
+    forward_compute()
+    t2 = time.time()
+    print(f"Forward computation time: {t2 - t1:.2f} seconds")
     post_process("ti_simulation_test")

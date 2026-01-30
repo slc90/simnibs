@@ -475,12 +475,12 @@ class TesFlexOptimization:
             or "focality" in self.goal
             or "focality_inv" in self.goal
         ):
-            assert len(self.goal) == len(self._roi), (
-                "Please provide a goal function for each ROI."
-            )
-            assert len(self.weights) == len(self._roi), (
-                "Number of weights has to match the number ROIs"
-            )
+            assert len(self.goal) == len(
+                self._roi
+            ), "Please provide a goal function for each ROI."
+            assert len(self.weights) == len(
+                self._roi
+            ), "Number of weights has to match the number ROIs"
 
         if "focality" in self.goal and len(self._roi) != 2:
             raise ValueError(
@@ -2407,9 +2407,9 @@ class TesFlexOptimization:
                             )
                         )
                     else:
-                        node_idx_dict[i_channel_stim][_electrode.channel_id] = (
-                            _electrode.node_idx
-                        )
+                        node_idx_dict[i_channel_stim][
+                            _electrode.channel_id
+                        ] = _electrode.node_idx
 
                     i_ele += 1
 
