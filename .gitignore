@@ -164,3 +164,9 @@ ti_simulation_test
 TI_leadfield_optimize
 ti_leadfield_free_optimize
 ti_leadfield_free_optimize_three_electrodes
+test.py
+test2.py
+ti_leadfield_free_optimize_1/
+ti_leadfield_free_optimize_2/
+ti_leadfield_free_optimize_3/
+electro.ply

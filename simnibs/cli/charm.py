@@ -88,75 +88,98 @@ def parseArguments(argv):
 
 
 def main():
-    args = parseArguments(sys.argv[1:])
-    subject_dir = os.path.join(os.getcwd(), "m2m_" + args.subID)
+    # args = parseArguments(sys.argv[1:])
+    # subject_dir = os.path.join(os.getcwd(), "m2m_" + args.subID)
 
-    # run segmentation and meshing
+    # # run segmentation and meshing
 
-    # check whether it's a fresh run
-    fresh_run = args.registerT2
-    fresh_run |= (
-        args.initatlas and not args.registerT2 and args.T1 is not None
-    )  # initatlas is the first step in the pipeline when a T1 is explicitly supplied
+    # # check whether it's a fresh run
+    # fresh_run = args.registerT2
+    # fresh_run |= (
+    #     args.initatlas and not args.registerT2 and args.T1 is not None
+    # )  # initatlas is the first step in the pipeline when a T1 is explicitly supplied
 
-    if not any(
-        [args.registerT2, args.initatlas, args.segment, args.mesh, args.surfaces]
-    ):
-        # if charm part is not explicitly stated, run all
-        fresh_run = True
-        args.initatlas = True
-        args.segment = True
-        args.mesh = True
-        args.surfaces = True
-        if args.T2 is not None:
-            args.registerT2 = True
+    # if not any(
+    #     [args.registerT2, args.initatlas, args.segment, args.mesh, args.surfaces]
+    # ):
+    #     # if charm part is not explicitly stated, run all
+    #     fresh_run = True
+    #     args.initatlas = True
+    #     args.segment = True
+    #     args.mesh = True
+    #     args.surfaces = True
+    #     if args.T2 is not None:
+    #         args.registerT2 = True
 
-    # T1 name has to be supplied when it's a fresh run
-    if fresh_run and args.T1 is None:
-        raise RuntimeError("ERROR: Filename of T1-weighted image has to be supplied")
+    # # T1 name has to be supplied when it's a fresh run
+    # if fresh_run and args.T1 is None:
+    #     raise RuntimeError("ERROR: Filename of T1-weighted image has to be supplied")
 
-    # T2 name has to be supplied when registerT2==True
-    if args.registerT2 and args.T2 is None:
-        raise RuntimeError("ERROR: Filename of T2-weighted image has to be supplied")
+    # # T2 name has to be supplied when registerT2==True
+    # if args.registerT2 and args.T2 is None:
+    #     raise RuntimeError("ERROR: Filename of T2-weighted image has to be supplied")
 
-    if fresh_run and os.path.exists(subject_dir):
-        # stop when subject_dir folder exists and it's a fresh run (unless --forcerun is set)
-        if not args.forcerun:
-            raise RuntimeError(
-                "ERROR: --forcerun has to be set to overwrite existing m2m_{subID} folder"
-            )
-        else:
-            if args.usesettings is not None and os.path.dirname(
-                os.path.abspath(args.usesettings[0])
-            ) == os.path.abspath(subject_dir):
-                raise RuntimeError(
-                    "ERROR: move the custom settings file out of the m2m-folder before running with --forcerun."
-                )
+    # if fresh_run and os.path.exists(subject_dir):
+    #     # stop when subject_dir folder exists and it's a fresh run (unless --forcerun is set)
+    #     if not args.forcerun:
+    #         raise RuntimeError(
+    #             "ERROR: --forcerun has to be set to overwrite existing m2m_{subID} folder"
+    #         )
+    #     else:
+    #         if args.usesettings is not None and os.path.dirname(
+    #             os.path.abspath(args.usesettings[0])
+    #         ) == os.path.abspath(subject_dir):
+    #             raise RuntimeError(
+    #                 "ERROR: move the custom settings file out of the m2m-folder before running with --forcerun."
+    #             )
 
-            shutil.rmtree(subject_dir)
-            time.sleep(2)
+    #         shutil.rmtree(subject_dir)
+    #         time.sleep(2)
 
-    if args.skipregisterT2:
-        args.registerT2 = False
+    # if args.skipregisterT2:
+    #     args.registerT2 = False
 
+    subject_dir = "data/m2m_ernie/"
+    T1_path = subject_dir + "T1.nii.gz"
+    T2_path = subject_dir + "T2_reg.nii.gz"
+    # 已经是配准好的T2了,不要再配准
+    registerT2 = False
+    # 把脑图谱配准到MRI
+    initatlas = True
+    segment = True
+    surfaces = True
+    mesh_image = True
+    # 就填None,自动使用SimNIBS/charm.ini
+    usesettings = None
+    noneck = False
+    # 没有,直接自动计算
+    inittransform = None
+    usetransform = None
+    forceqform = False
+    # 这个T2里的qform有问题,强行用sform,不然程序报错
+    forcesform = True
+    fs_dir = None
+    # 无用
+    options_str = ""
+    debug = True
     charm_main.run(
         subject_dir,
-        args.T1,
-        args.T2,
-        args.registerT2,
-        args.initatlas,
-        args.segment,
-        args.surfaces,
-        args.mesh,
-        args.usesettings,
-        args.noneck,
-        args.inittransform,
-        args.usetransform,
-        args.forceqform,
-        args.forcesform,
-        args.fs_dir,
-        " ".join(sys.argv[1:]),
-        args.debug,
+        T1_path,
+        T2_path,
+        registerT2,
+        initatlas,
+        segment,
+        surfaces,
+        mesh_image,
+        usesettings,
+        noneck,
+        inittransform,
+        usetransform,
+        forceqform,
+        forcesform,
+        fs_dir,
+        options_str,
+        debug,
     )
 
     # mesh vs mesh_image

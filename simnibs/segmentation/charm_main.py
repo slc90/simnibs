@@ -339,7 +339,6 @@ def run(
     if create_surfaces:
         surface_settings = settings["surfaces"]
         tissue_map_simnibs = atlas_settings["conductivity_mapping"]["simnibs_tissues"]
-
         if fs_dir:
             logger.info("Starting surface creation")
             t_start = time.perf_counter()

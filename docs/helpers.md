@@ -11,3 +11,5 @@
   * https://github.com/conda-forge/miniforge miniforge,conda-forge社区自己维护的conda
 * TI-toolbox
   * https://idossha.github.io/TI-Toolbox/wiki/
+* CAT12
+  * https://github.com/ChristianGaser/cat12

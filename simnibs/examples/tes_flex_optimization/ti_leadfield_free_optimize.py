@@ -37,11 +37,11 @@ def custom_goal_function(e_field):
 def main():
     opt = opt_struct.TesFlexOptimization()
     opt.subpath = "data/m2m_ernie"
-    opt.output_folder = "ti_leadfield_free_optimize"
+    opt.output_folder = "ti_leadfield_free_optimize_3"
     # optimize the focality of "max_TI" in the ROI ("max_TI" defined by e_postproc)
     # 这里可以自定义优化目标
-    # opt.goal = "focality"
-    opt.goal = custom_goal_function
+    opt.goal = "focality"
+    # opt.goal = custom_goal_function
     # define threshold(s) of the electric field in V/m in the non-ROI and the ROI:
     # if one threshold is defined, it is the goal that the e-field in the non-ROI is lower than this value and higher than this value in the ROI
     # if two thresholds are defined, the first one is the threshold of the non-ROI and the second one is for the ROI
@@ -62,8 +62,7 @@ def main():
     electrode_layout: ElectrodeArrayPair = opt.add_electrode_layout(
         "ElectrodeArrayPair"
     )
-    electrode_layout.radius = [10, 12, 13]
-    electrode_layout.radius_bounds = [10, 15]
+    electrode_layout.radius = [12]
     electrode_layout.current = [0.002, -0.002]
     electrode_layout.current_estimator_method = "gpc"
     electrode_layout: ElectrodeArrayPair = opt.add_electrode_layout(

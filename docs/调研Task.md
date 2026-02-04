@@ -1,6 +1,7 @@
-# 任务
+# Task
   * [x] 使用官方的exe安装，然后使用自带的解释器Simnibs_python执行脚本 (只适合修改参数,不适合自定义开发)
-  * [x] ~~按照官方github上的方式，使用conda来安装~~ (conda安装包时要注意协议)
+  * [x] 按照官方github上的方式，使用conda来安装 (conda安装包时要注意协议)
+    * [x] 使用miniforge,使用的源是conda-forge,社区维护的
   * [ ] ~~按照项目开发方式安装~~ (Simnibs是GPL3.0协议,不能用这种方法)
     * [ ] ~~单独编译底层库，提供dll或者exe~~
     * [ ] ~~poetry安装python库~~
@@ -14,17 +15,20 @@
     * [x] 正向计算
     * [x] leadfield
     * [x] 逆向优化 (参数调整后运行一次太慢了,有些参数相互影响,乱设置会导致报错)
-  * [ ] 头模生成
-    * [ ] 重建
-    * [ ] 分割
-    * [ ] 有限元网格生成
+  * [x] 头模生成
+    * atlas配准
+    * 分割 https://www.sciencedirect.com/science/article/pii/S1053811920305309
+    * 生成表面 .gii
+      * 读取freeSurfer的结果
+      * 仿照CAT12(matlab库) python手搓
+    * 有限元网格生成 .msh cgal得到的结构再转成.msh
   * [ ] FEM计算
-  * [ ] 优化算法
-    * [ ] DIviding RECTangles (DIRECT)
-    * [ ] Differential Evolution
+  * [x] 优化算法
+    * https://docs.scipy.org/doc/scipy/reference/optimize.html#module-scipy.optimize
+    * DIviding RECTangles (DIRECT) 确定性结果 慢
+    * Differential Evolution 不确定结果,用multi-target多跑几次取最好的结果 
   * [x] 如何自定义优化算法
-    * 从文档来看不能
-    * 仿照自带的direct和differential_evolution,增加自己的函数,返回OptimizeResult类
+    * 从文档来看不能,可以尝试使用scipy中其他优化算法
   * [x] 如何自定义目标函数
     * 可以传入自定义函数
     * user provided function taking e-field as an input which is a list of list of np.ndarrays of float [n_channel_stim][n_roi] containing np.array with e-field
@@ -47,11 +51,14 @@
       return score
       ```
     * 貌似会导致hdf5的无法序列化问题?
-  * [ ] gmsh可视化
+  * [ ] 可视化
+    * 使用自带的gmsh查看msh文件
+    * 后端输出为ply文件,把Node、Element、NodeValue、ElementValue都存进去,前端用NodeValue后处理为颜色,仍需验证
+    * https://github.com/amandaghassaei/msh-parser 前端直接读取msh,再做后处理,仍需验证
   * [x] TI-toolbox
     * 核心功能就是SimNIBS
     * 增加了一个使用leadfield暴力搜索的TI逆向优化方法
     * 增加额外的功能:文件管理、文件格式转换到别的3D可视化软件、假设检验，以及一些不太重要的功能
     * 软件的架构复杂,部署困难
     * SimNIBS中很多参数并没有在GUI上可以设置,应该还是以简单能用为主
-  * [ ] 比较穹顶和SimNIBS的差异
+  * [x] 比较穹顶和SimNIBS的差异

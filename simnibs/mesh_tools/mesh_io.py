@@ -4646,9 +4646,10 @@ class ElementData(Data):
             space
         kwargs: see the scipy.ndimage.map_coordinates documentation
         """
-        assert len(data_grid.shape) in [3, 4], (
-            "The data grid must have 3 or 4 dimensions"
-        )
+        assert len(data_grid.shape) in [
+            3,
+            4,
+        ], "The data grid must have 3 or 4 dimensions"
         bar = mesh.elements_baricenters().value.T
         iM = np.linalg.inv(affine)
         coords = iM[:3, :3].dot(bar) + iM[:3, 3, None]
@@ -5180,9 +5181,10 @@ class NodeData(Data):
             space
         kwargs: see the scipy.ndimage.map_coordinates documentation
         """
-        assert len(data_grid.shape) in [3, 4], (
-            "The data grid must have 3 or 4 dimensions"
-        )
+        assert len(data_grid.shape) in [
+            3,
+            4,
+        ], "The data grid must have 3 or 4 dimensions"
 
         pos = mesh.nodes.node_coord.T
         iM = np.linalg.inv(affine)
@@ -5776,15 +5778,15 @@ def _read_msh_2(fn, m, skip_data=False):
                 return "EOF", "", 0, 0
             # string tags
             number_of_string_tags = int(f.readline().decode("ascii"))
-            assert number_of_string_tags == 1, (
-                "Invalid Mesh File: invalid number of string tags"
-            )
+            assert (
+                number_of_string_tags == 1
+            ), "Invalid Mesh File: invalid number of string tags"
             name = f.readline().decode("ascii").strip().strip('"')
             # real tags
             number_of_real_tags = int(f.readline().decode("ascii"))
-            assert number_of_real_tags == 1, (
-                "Invalid Mesh File: invalid number of real tags"
-            )
+            assert (
+                number_of_real_tags == 1
+            ), "Invalid Mesh File: invalid number of real tags"
             f.readline()
             # integer tags
             number_of_integer_tags = int(
@@ -6096,15 +6098,15 @@ def _read_msh_4(fn, m, skip_data=False):
                 return "EOF", "", 0, 0
             # string tags
             number_of_string_tags = int(f.readline().decode("ascii"))
-            assert number_of_string_tags == 1, (
-                "Invalid Mesh File: invalid number of string tags"
-            )
+            assert (
+                number_of_string_tags == 1
+            ), "Invalid Mesh File: invalid number of string tags"
             name = f.readline().decode("ascii").strip().strip('"')
             # real tags
             number_of_real_tags = int(f.readline().decode("ascii"))
-            assert number_of_real_tags == 1, (
-                "Invalid Mesh File: invalid number of real tags"
-            )
+            assert (
+                number_of_real_tags == 1
+            ), "Invalid Mesh File: invalid number of real tags"
             f.readline()
             # integer tags
             number_of_integer_tags = int(f.readline().decode("ascii"))  # usually 3 or 4

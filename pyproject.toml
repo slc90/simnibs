@@ -28,6 +28,7 @@ petsc4py = { url = "https://github.com/simnibs/petsc4py/releases/download/v3.21.
 pymumps = { path = "pymumps-0.3.3-cp311-cp311-win_amd64.whl" }
 setuptools-scm = "^9.2.2"
 matplotlib = "^3.10.8"
+meshio = "^5.3.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.3.3"
