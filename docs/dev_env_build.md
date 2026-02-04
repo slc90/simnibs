@@ -8,5 +8,6 @@
 7. mumps == 5.7.3 
     * https://github.com/scivision/mumps/blob/main/Readme_options.md
     * https://blog.actpi.com/articles/2023/compile_mumps.html
-    * https://github.com/PyMumps/pymumps 创建wheel时用intel One Api编译器
+    * https://github.com/PyMumps/pymumps 创建wheel时用Intel One Api编译器,需要修改setup.py
+    * 即使这样编译成功后,运行时也需要Intel One Api的dll,所以最好得把所有dll都找齐,一起带进wheel
 8. tbb == 2022.3.0 (使用vcpkg安装, 安装版本为 2022.3.0)
